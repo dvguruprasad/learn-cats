@@ -1,14 +1,14 @@
 package example
 
-trait Applicative[F[_]] {
+trait Applicative[F[_]] extends Functor[F]{
     def pure[A](a: A): F[A]    
 
     def apply[A, B](ff: F[A => B])(fa: F[A]): F[B]
 
-    def map[A, B](f: A => B)(fa: F[A]): F[B] = apply(pure(f))(fa)
+    override def map[A, B](fa: F[A])(f: A => B): F[B] = apply(pure(f))(fa)
 
     def map2[A, B, Z](f: (A, B) => Z)(fa: F[A], fb: F[B]): F[Z] = 
-        apply(map((b: B) => f(_, b))(fb))(fa)
+        apply(map(fb)((b: B) => f(_, b)))(fa)
 
     def map3[A, B, C, Z](f: (A, B, C) => Z)(fa: F[A], fb: F[B], fc: F[C]): F[Z] = 
         apply(map2((b: B, c: C) => f(_, b, c))(fb, fc))(fa)
@@ -26,6 +26,7 @@ object Applicative {
         def apply[A, B](ff:Option[A => B])(fa: Option[A]): Option[B] = 
             { (fa, ff) match {
                 case (None, None) => None
+                case (_, None) => None
                 case (None, _) => None
                 case (Some(a), Some(f)) => Some(f(a))
             }}
